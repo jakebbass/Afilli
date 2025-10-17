@@ -15,6 +15,7 @@ import {
   Bot,
   UserPlus,
   LogOut,
+  CreditCard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { create } from "zustand";
@@ -54,6 +55,7 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Activity", href: "/activity", icon: TrendingUp },
   { name: "Campaigns", href: "/campaigns", icon: Megaphone },
+  { name: "Billing", href: "/billing", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
