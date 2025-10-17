@@ -47,6 +47,11 @@ const envSchema = z.object({
   POSTHOG_API_KEY: preprocessEmptyString,
   POSTHOG_HOST: preprocessEmptyString,
 
+  // Stripe
+  STRIPE_SECRET_KEY: preprocessEmptyString,
+  STRIPE_PUBLISHABLE_KEY: preprocessEmptyString,
+  STRIPE_WEBHOOK_SECRET: preprocessEmptyString,
+
   // Redis
   REDIS_URL: z.string().default("redis://redis:6379"),
 });

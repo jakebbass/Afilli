@@ -10,6 +10,7 @@ import * as leads from "~/server/trpc/procedures/leads";
 import * as clay from "~/server/trpc/procedures/clay";
 import * as emails from "~/server/trpc/procedures/emails";
 import * as webhooks from "~/server/trpc/procedures/webhooks";
+import * as stripe from "~/server/trpc/procedures/stripe";
 
 export const appRouter = createTRPCRouter({
   // Auth
@@ -104,6 +105,14 @@ export const appRouter = createTRPCRouter({
   // Webhooks
   webhooks: createTRPCRouter({
     sendgrid: webhooks.handleSendGridWebhook,
+  }),
+
+  // Stripe
+  stripe: createTRPCRouter({
+    createCheckoutSession: stripe.createCheckoutSession,
+    createPortalSession: stripe.createPortalSession,
+    getSubscription: stripe.getSubscription,
+    getPlans: stripe.getPlans,
   }),
 });
 
