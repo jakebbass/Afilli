@@ -2,7 +2,7 @@ import { z } from "zod";
 import { baseProcedure } from "~/server/trpc/main";
 import { db } from "~/server/db";
 import { fetchAwinOffers } from "~/server/services/awin-affiliate";
-import { fetchClickbankOffers } from "~/server/services/clickbank-affiliate";
+import { fetchClickBankOffers } from "~/server/services/clickbank-affiliate";
 
 export const listOffers = baseProcedure
   .input(
@@ -139,7 +139,15 @@ export const rankOffers = baseProcedure
 export const syncOffers = baseProcedure
   .input(
     z.object({
-      source: z.enum(["awin", "cj", "impact", "shareasale", "rakuten", "amazon", "clickbank"]),
+      source: z.enum([
+        "awin",
+        "cj",
+        "impact",
+        "shareasale",
+        "rakuten",
+        "amazon",
+        "clickbank",
+      ]),
       since: z.date().optional(),
     }),
   )
@@ -149,13 +157,13 @@ export const syncOffers = baseProcedure
 
     if (input.source === "awin") {
       console.log(`Syncing offers from Awin...`);
-      
+
       try {
         // Fetch offers from Awin API
         const offers = await fetchAwinOffers(input.since);
-        
+
         console.log(`Fetched ${offers.length} offers from Awin`);
-        
+
         // Upsert each offer into the database
         for (const offer of offers) {
           const existing = await db.offer.findFirst({
@@ -164,7 +172,7 @@ export const syncOffers = baseProcedure
               sourceId: offer.sourceId,
             },
           });
-          
+
           if (existing) {
             // Update existing offer
             await db.offer.update({
@@ -193,7 +201,7 @@ export const syncOffers = baseProcedure
             added++;
           }
         }
-        
+
         console.log(`Sync complete: ${added} added, ${updated} updated`);
       } catch (error) {
         console.error("Error syncing Awin offers:", error);
@@ -201,13 +209,13 @@ export const syncOffers = baseProcedure
       }
     } else if (input.source === "clickbank") {
       console.log(`Syncing offers from Clickbank...`);
-      
+
       try {
         // Fetch offers from Clickbank API
-        const offers = await fetchClickbankOffers(input.since);
-        
+        const offers = await fetchClickBankOffers(input.since);
+
         console.log(`Fetched ${offers.length} offers from Clickbank`);
-        
+
         // Upsert each offer into the database
         for (const offer of offers) {
           const existing = await db.offer.findFirst({
@@ -216,7 +224,7 @@ export const syncOffers = baseProcedure
               sourceId: offer.sourceId,
             },
           });
-          
+
           if (existing) {
             // Update existing offer
             await db.offer.update({
@@ -245,7 +253,7 @@ export const syncOffers = baseProcedure
             added++;
           }
         }
-        
+
         console.log(`Sync complete: ${added} added, ${updated} updated`);
       } catch (error) {
         console.error("Error syncing Clickbank offers:", error);
@@ -253,7 +261,9 @@ export const syncOffers = baseProcedure
       }
     } else {
       // Other sources would have their own adapters
-      throw new Error(`Sync for ${input.source} not yet implemented. Currently Awin and Clickbank are supported.`);
+      throw new Error(
+        `Sync for ${input.source} not yet implemented. Currently Awin and Clickbank are supported.`,
+      );
     }
 
     return {

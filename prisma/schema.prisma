@@ -7,19 +7,32 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:postgres@postgres/app" // hardcoded because it's an internal docker connection
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  orgId     String
-  role      String   @default("user")
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  orgId         String?
+  role          String    @default("user") // "user", "admin"
+  subscription  String    @default("free") // "free", "pro", "enterprise"
+  stripeCustomerId String? @unique
+  stripeSubscriptionId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  campaigns     Campaign[]
+  agents        Agent[]
+  personas      Persona[]
 }
 
 model Persona {
   id                String         @id @default(cuid())
+  userId            String?
+  user              User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   name              String
   description       String?
   hypotheses        Json           @default("[]")
@@ -58,11 +71,14 @@ model Offer {
   updatedAt     DateTime @updatedAt
 
   @@index([source])
+  @@unique([source, sourceId])
   @@index([cps])
 }
 
 model Campaign {
   id         String     @id @default(cuid())
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name       String
   personaId  String
   persona    Persona    @relation(fields: [personaId], references: [id], onDelete: Cascade)
@@ -158,6 +174,8 @@ model Integration {
 
 model Agent {
   id          String      @id @default(cuid())
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   type        String // researcher, outreach, optimizer, orchestrator
   status      String      @default("idle") // idle, working, paused, error

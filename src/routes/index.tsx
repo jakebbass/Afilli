@@ -5,5 +5,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  return <Navigate to="/dashboard" />;
+  // Check if user is authenticated
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+
+  if (token) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <Navigate to="/auth/login" />;
 }

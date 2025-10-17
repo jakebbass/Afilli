@@ -34,6 +34,9 @@
     "@trpc/tanstack-react-query": "^11.1.2",
     "ai": "^5.0.75",
     "autoprefixer": "^10.4.20",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.3",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.545.0",
     "minio": "^8.0.5",
     "playwright": "^1.54.1",
@@ -55,6 +58,8 @@
   "devDependencies": {
     "@eslint/js": "^9.25.1",
     "@tanstack/eslint-plugin-router": "^1.115.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.5.4",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

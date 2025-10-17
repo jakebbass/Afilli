@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "react-hot-toast";
 import { TRPCReactProvider } from "~/trpc/react";
+import { AuthProvider } from "~/lib/auth";
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -13,7 +14,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <TRPCReactProvider>
-      <RootContent />
+      <AuthProvider>
+        <RootContent />
+      </AuthProvider>
     </TRPCReactProvider>
   );
 }

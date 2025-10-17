@@ -19,7 +19,13 @@ export default defineEventHandler((event) => {
     req: request,
     router: appRouter,
     createContext() {
-      return {};
+      return {
+        req: {
+          headers: {
+            authorization: request.headers.get("authorization") || "",
+          },
+        },
+      };
     },
     onError({ error, path }) {
       console.error(`tRPC error on '${path}':`, error);

@@ -1,7 +1,5 @@
-import {
-  createCallerFactory,
-  createTRPCRouter,
-} from "~/server/trpc/main";
+import { createCallerFactory, createTRPCRouter } from "~/server/trpc/main";
+import * as auth from "~/server/trpc/procedures/auth";
 import * as offers from "~/server/trpc/procedures/offers";
 import * as personas from "~/server/trpc/procedures/personas";
 import * as campaigns from "~/server/trpc/procedures/campaigns";
@@ -14,6 +12,15 @@ import * as emails from "~/server/trpc/procedures/emails";
 import * as webhooks from "~/server/trpc/procedures/webhooks";
 
 export const appRouter = createTRPCRouter({
+  // Auth
+  auth: createTRPCRouter({
+    register: auth.register,
+    login: auth.login,
+    getCurrentUser: auth.getCurrentUser,
+    updateProfile: auth.updateProfile,
+    changePassword: auth.changePassword,
+  }),
+
   // Offers
   offers: createTRPCRouter({
     list: offers.listOffers,
