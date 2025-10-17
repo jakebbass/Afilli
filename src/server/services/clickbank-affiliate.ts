@@ -168,7 +168,7 @@ function generateMockClickbankProducts(category: string): ClickbankProduct[] {
   return products;
 }
 
-export async function fetchClickbankOffers(since?: Date) {
+export async function fetchClickBankOffers(since?: Date) {
   console.log('[CLICKBANK-AFFILIATE] 🔑 Checking ClickBank API credentials...');
   
   // Check if Clickbank credentials are configured

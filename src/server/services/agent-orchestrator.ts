@@ -29,6 +29,7 @@ export const TASK_TYPES = {
   SEO_OPTIMIZATION: 'seo_optimization',
   OFFER_SYNC: 'offer_sync',
   OFFER_SCORING: 'offer_scoring',
+  MARKET_INTELLIGENCE: 'market_intelligence',
   PERSONA_GENERATION: 'persona_generation',
   CAMPAIGN_MONITORING: 'campaign_monitoring',
   OFFER_SWITCHING: 'offer_switching',
@@ -725,6 +726,65 @@ Also recommend an action: keep, remove, or promote.`,
             remove: object.scores.filter(s => s.recommendAction === 'remove').length,
             promote: object.scores.filter(s => s.recommendAction === 'promote').length,
           },
+        };
+        break;
+      }
+
+      case TASK_TYPES.MARKET_INTELLIGENCE: {
+        // AI-powered market intelligence and competitive analysis
+        const recentOffers = await db.offer.findMany({
+          take: 50,
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const model = openrouter('anthropic/claude-3.5-sonnet');
+        const { object } = await generateObject({
+          model,
+          schema: z.object({
+            insights: z.array(z.object({
+              category: z.string(),
+              trend: z.enum(['rising', 'declining', 'stable']),
+              reasoning: z.string(),
+              topOffers: z.array(z.string()).max(3),
+              opportunityScore: z.number().min(0).max(100),
+            })),
+            recommendations: z.array(z.object({
+              action: z.string(),
+              priority: z.enum(['high', 'medium', 'low']),
+              reasoning: z.string(),
+            })),
+          }),
+          prompt: `Analyze the current affiliate offer landscape and provide market intelligence insights.
+
+Recent Offers:
+${recentOffers.slice(0, 20).map(o => `
+Category: ${o.categories.join(', ')}
+Name: ${o.name}
+CPS: ${o.cps}
+Commission: ${o.payout}
+EPC: ${o.epc || 'N/A'}
+Cookie: ${o.cookieWindow} days
+Source: ${o.source}
+`).join('\n---\n')}
+
+Provide:
+1. Market trend analysis by category (rising/declining/stable)
+2. Top performing offers in each category
+3. Opportunity scores (0-100) for market penetration
+4. Strategic recommendations with priority levels
+
+Focus on identifying:
+- Emerging high-converting niches
+- Oversaturated markets to avoid
+- Seasonal trends and timing opportunities
+- Competitive gaps and advantages`,
+        });
+
+        output = {
+          insights: object.insights,
+          recommendations: object.recommendations,
+          analysisDate: new Date().toISOString(),
+          offersAnalyzed: recentOffers.length,
         };
         break;
       }
