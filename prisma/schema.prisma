@@ -1,0 +1,250 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@postgres/app" // hardcoded because it's an internal docker connection
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  orgId     String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+}
+
+model Persona {
+  id                String         @id @default(cuid())
+  name              String
+  description       String?
+  hypotheses        Json           @default("[]")
+  signals           Json           @default("[]")
+  channels          Json           @default("[]")
+  audienceSizeEst   Int?
+  clvEst            Float?
+  metrics           Json?
+  webInsights       Json?          @default("{}") // Stores insights from web scraping
+  searchKeywords    String[]       @default([]) // Keywords to search for this persona
+  targetSites       String[]       @default([]) // Websites where this persona hangs out
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  campaigns         Campaign[]
+  agents            Agent[]
+  customerLeads     CustomerLead[]
+}
+
+model Offer {
+  id            String   @id @default(cuid())
+  source        String // e.g., "cj", "impact", "shareasale"
+  sourceId      String?
+  name          String
+  merchant      String
+  url           String
+  payout        String
+  epc           Float?
+  cookieWindow  Int? // in days
+  geo           String?
+  categories    String[]
+  cps           Float    @default(0) // Conversion Potential Score
+  meta          Json     @default("{}")
+  imageUrl      String?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([source])
+  @@index([cps])
+}
+
+model Campaign {
+  id         String     @id @default(cuid())
+  name       String
+  personaId  String
+  persona    Persona    @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  status     String     @default("draft") // draft, active, paused, completed
+  channels   String[] // email, twitter, facebook, linkedin, chat
+  goals      Json       @default("{}")
+  budget     Int?
+  offerIds   String[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  creatives  Creative[]
+  flights    Flight[]
+  results    Result[]
+}
+
+model Creative {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  channel    String // email, twitter, facebook, linkedin, chat
+  subject    String?
+  body       String   @db.Text
+  media      Json     @default("[]")
+  ctaUrl     String
+  utm        Json?
+  variant    String   @default("a") // for A/B testing
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Flight {
+  id         String    @id @default(cuid())
+  campaignId String
+  campaign   Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  schedule   Json // cron or time windows
+  audience   Json // targeting rules
+  status     String    @default("scheduled") // scheduled, running, completed, failed
+  lastRunAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String
+  type      String // page_view, product_view, time_on_page, scroll_depth, email_click, social_click, chat_open, add_to_cart_intent
+  payload   Json     @default("{}")
+  ts        DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([type])
+  @@index([ts])
+}
+
+model Result {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  channel    String
+  metrics    Json // opens, clicks, ctr, cvr, revenue
+  ts         DateTime @default(now())
+
+  @@index([campaignId])
+  @@index([ts])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String // user, assistant, system
+  content   String   @db.Text
+  offers    Json?
+  buyScore  Int?
+  ts        DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([ts])
+}
+
+model Integration {
+  id          String   @id @default(cuid())
+  type        String // email, social, affiliate
+  provider    String // sendgrid, twitter, cj, etc.
+  credentials Json // encrypted API keys
+  config      Json     @default("{}")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([type, provider])
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  name        String
+  type        String // researcher, outreach, optimizer, orchestrator
+  status      String      @default("idle") // idle, working, paused, error
+  personaId   String?
+  persona     Persona?    @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  config      Json        @default("{}")
+  currentTask String?
+  lastRunAt   DateTime?
+  metrics     Json?       @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  tasks       AgentTask[]
+
+  @@index([status])
+  @@index([personaId])
+}
+
+model AgentTask {
+  id          String    @id @default(cuid())
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  type        String // web_search, lead_discovery, content_analysis, outreach_generation, offer_optimization, seo_optimization
+  status      String    @default("pending") // pending, running, completed, failed
+  input       Json      @default("{}")
+  output      Json?
+  error       String?   @db.Text
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([agentId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model CustomerLead {
+  id                String   @id @default(cuid())
+  personaId         String?
+  persona           Persona? @relation(fields: [personaId], references: [id], onDelete: SetNull)
+  name              String?
+  company           String?
+  email             String?
+  phone             String?
+  website           String?
+  sourceUrl         String
+  discoveredVia     String // web_search, social_media, forum, blog, etc.
+  interests         String[]
+  painPoints        String[]
+  buyingSignals     Json     @default("[]")
+  recommendedOffers String[] // offer IDs
+  outreachStatus    String   @default("discovered") // discovered, contacted, responded, converted, unqualified
+  outreachAttempts  Int      @default(0)
+  lastContactedAt   DateTime?
+  notes             String?  @db.Text
+  metadata          Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  sentEmails        SentEmail[]
+
+  @@index([personaId])
+  @@index([outreachStatus])
+  @@index([createdAt])
+}
+
+model SentEmail {
+  id              Int       @id @default(autoincrement())
+  leadId          String
+  lead            CustomerLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  sendgridId      String?   @unique // SendGrid message ID for tracking
+  subject         String
+  body            String    @db.Text
+  status          String    @default("pending") // pending, sent, delivered, opened, clicked, bounced, failed
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  openedAt        DateTime?
+  firstOpenedAt   DateTime?
+  clickedAt       DateTime?
+  firstClickedAt  DateTime?
+  bouncedAt       DateTime?
+  openCount       Int       @default(0)
+  clickCount      Int       @default(0)
+  errorMessage    String?   @db.Text
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+
+  @@index([leadId])
+  @@index([status])
+  @@index([createdAt])
+}
