@@ -3,6 +3,7 @@ import { Layout } from "~/components/Layout";
 import { useTRPC } from "~/trpc/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useRequireAuth } from "~/lib/auth";
 import toast from "react-hot-toast";
 import {
   Target,
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/offers/")({
 });
 
 function OffersPage() {
+  const { user, loading } = useRequireAuth();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -31,6 +33,19 @@ function OffersPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [minCps, setMinCps] = useState<number>(0);
   const [sortBy, setSortBy] = useState<"cps" | "epc" | "payout" | "createdAt">("cps");
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const syncOffersMutation = useMutation(
     trpc.offers.sync.mutationOptions({

@@ -4,6 +4,7 @@ import { KPICard } from "~/components/KPICard";
 import { StatCard } from "~/components/StatCard";
 import { useTRPC } from "~/trpc/react";
 import { useQuery } from "@tanstack/react-query";
+import { useRequireAuth } from "~/lib/auth";
 import {
   DollarSign,
   MousePointerClick,
@@ -23,11 +24,25 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function Dashboard() {
+  const { user, loading } = useRequireAuth();
   const trpc = useTRPC();
   const dashboardQuery = useQuery(trpc.campaigns.dashboardStats.queryOptions());
   const emailStatsQuery = useQuery(trpc.emails.globalStats.queryOptions({ days: 30 }));
 
   const stats = dashboardQuery.data;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

@@ -3,6 +3,7 @@ import { Layout } from "~/components/Layout";
 import { useTRPC } from "~/trpc/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useRequireAuth } from "~/lib/auth";
 import { 
   Activity, 
   Chrome,
@@ -252,9 +253,23 @@ function TaskDetailPanel({ task }: { task: any }) {
 }
 
 function ActivityPage() {
+  const { user, loading } = useRequireAuth();
   const trpc = useTRPC();
   const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const agentsQuery = useQuery(trpc.agents.list.queryOptions());
 
