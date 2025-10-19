@@ -3,6 +3,7 @@ import { Layout } from "~/components/Layout";
 import { useTRPC } from "~/trpc/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useRequireAuth } from "~/lib/auth";
 import { 
   Users, 
   Mail,
@@ -488,9 +489,23 @@ function LeadDetailsModal({
 }
 
 function LeadsPage() {
+  const { user, loading } = useRequireAuth();
   const trpc = useTRPC();
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const leadsQuery = useQuery(trpc.leads.list.queryOptions({
     outreachStatus: statusFilter as any,

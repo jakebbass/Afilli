@@ -14,10 +14,13 @@ import {
   TrendingUp,
   Bot,
   UserPlus,
+  LogOut,
+  CreditCard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useAuth } from "~/lib/auth";
 
 interface UIStore {
   darkMode: boolean;
@@ -52,6 +55,7 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Activity", href: "/activity", icon: TrendingUp },
   { name: "Campaigns", href: "/campaigns", icon: Megaphone },
+  { name: "Billing", href: "/billing", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -61,6 +65,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { darkMode, sidebarOpen, toggleDarkMode, toggleSidebar, setSidebarOpen } = useUIStore();
+  const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -120,16 +125,24 @@ export function Layout({ children }: LayoutProps) {
           <div className="border-t border-gray-200 dark:border-gray-800 p-4">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold">
-                DA
+                {user?.name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || "U"}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  Demo Account
+                  {user?.name || "User"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  demo@affiliate.ai
+                  {user?.email || ""}
                 </p>
               </div>
+              <button
+                onClick={logout}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
           </div>
         </div>
